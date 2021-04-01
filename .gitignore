@@ -68,6 +68,9 @@ instance/
 # Scrapy stuff:
 .scrapy
 
+# Spreadsheets
+.xlsx
+
 # Sphinx documentation
 docs/_build/
 
