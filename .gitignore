@@ -69,7 +69,7 @@ instance/
 .scrapy
 
 # Spreadsheets
-.xlsx
+*.xlsx
 
 # Sphinx documentation
 docs/_build/
