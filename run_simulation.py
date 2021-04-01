@@ -41,7 +41,7 @@ def sjn(job_list):
     #take a copy
     this_list = copy.deepcopy(job_list)
 
-    #first job does not wait, first job's finish time is just its cycle
+    #first job does not wait, first job's finish time is just its cycle (non-premptive)
     time_available = this_list[0].cycle
     this_list[0].finish = time_available
     this_list[0].wait = 0
@@ -73,43 +73,45 @@ def sjn(job_list):
 
 #******************SRT********************#
 def srt(job_list):
-    
+    #take a copy
     this_list = copy.deepcopy(job_list)
 
-    for item in this_list:
-        item.time_left = item.cycle    
-    waiting_q = this_list[1:]
-
-    running_job = this_list[0]
-        
-    time = 0
+    #init each job's remaining time to its cycle
+    for t in this_list:
+        t.time_left = t.cycle
     
-    while(len(waiting_q)!=0):
+    #unit of time
+    time = 0
+
+    while(do_srt(this_list)):
         
-        #inc time and dec time left
-        time = time + 1
-        running_job.time_left = running_job.time_left - 1
-        #if time_left is zero this job is done
-        if(running_job.time_left == 0):
-            running_job.finish = time
-            #now set the running job to the available job with smallest cycle and arrival time
-            get_next_sjn(waiting_q,time)
-            
-        #if the job is still running, see if we can pre-empt it
+        #running job is the job available at this time with the lowest cycle
+        running_job = get_running(this_list,time)
+
+        if(running_job is None):
+            break
         else:
-            pre_empt = can_prempt(waiting_q,running_job,time)
-            print(pre_empt)
-            #if we can pre-empt
-            if(pre_empt != -1):
-                #remove the job that is meant to pre-empt from the waiting queue
-                waiting_q.remove(pre_empt)
-                #add the running job to the waiting queue
-                waiting_q.append(running_job)
-                #set the new job to be the running job and continue with loop
-                running_job = pre_empt
-                continue
-                
-     
+            running_job = this_list[this_list.index(running_job)]
+            #print("Time: "+ str(time) + "  Running: "+ running_job.name)
+
+        #if the running job will finish this cycle, set its finish value to time + 1
+        if(running_job.time_left - 1 == 0):
+            running_job.finish = time + 1
+            running_job.time_left = 0
+
+        #otherwise decrement time left and increment time_stamp
+        running_job.time_left = running_job.time_left - 1
+        time = time + 1
+    
+    #set the turnaround and wait times for each job
+    for job in this_list:
+        job.turn = int(job.finish) - int(job.arrival)
+        job.wait = int(job.turn) - int(job.cycle)
+
+    return((this_list,get_avg_turn(this_list),get_avg_wait(this_list)))
+        
+        
+  
 """
 reference:
 https://stackoverflow.com/questions/47779513/get-an-average-value-of-a-property-from-a-list-of-objects
@@ -123,35 +125,29 @@ def get_avg_wait(job_list):
 def sort_by_cycle(job_list):
     return (sorted(job_list, key=lambda x: x.cycle, reverse=False))
 
+def sort_by_cycle_left(job_list):
+    return (sorted(job_list, key=lambda x: x.time_left, reverse=False))
+
 """Get the first available job with shortest burst time"""
 def get_next_sjn(waiting,time):
     temp_wait = sort_by_cycle(waiting)
-
     for job in temp_wait:
         if(job.arrival <= time):
             return (job)
 
-""" this funciton isnt working, fix this""" 
-def can_prempt(job_list,running_job,time):
-    temp_list = []
-    
-    #first find all jobs ready at our current time-stamp
+"""helper funciton to check if there are still jobs to process for srt """
+def do_srt(job_list):
     for job in job_list:
-        if(int(job.arrival) <= time):
-            temp_list.append(job)
+        if(job.time_left != 0):
+            return True
+    return False
 
-    #sort all ready jobs by their cycle time
-    temp_list = sort_by_cycle(temp_list)
-
-    #search sorted temp list, if there is a job with a shorter remaning time
-    #pre-empt current job with that job
-    for t_job in temp_list:
-        if(t_job.time_left < running_job.time_left):
-            return(t_job)
-
-        #if there is a tie between cycle time, select job with lower arrival time
-        elif(t_job.time_left == running_job.time_left):
-            if(t_job.arrival < running_job.arrival):
-                return (t_job)
+"""Get the job with the shortest cycle time available at this time"""    
+def get_running(job_list,time):
+    temp_list = sort_by_cycle_left(job_list)
+    
+    for job in temp_list:
+        if(job.finish == None and job.arrival <= time):
+            return job
             
-    return -1
+    
