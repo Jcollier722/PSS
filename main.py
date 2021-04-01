@@ -11,8 +11,7 @@ if __name__ == "__main__":
     print("Turn: " + str(fcfs[1]) + "  Wait: " + str(fcfs[2]))
     sjn = sim.sjn(job_list)
     print("Turn: " + str(sjn[1]) + "  Wait: " + str(sjn[2]))
-    """
     srt= sim.srt(job_list)
     print("Turn: " + str(srt[1]) + "  Wait: " + str(srt[2]))
-
-
+    """
+   
