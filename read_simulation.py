@@ -2,13 +2,18 @@
 import pandas as pd
 
 class job:
-    def __init__(self,name,arrival,cycle,finish=None,turn=None,wait=None):
+    def __init__(self,
+                 name,
+                 arrival,
+                 cycle,
+                 finish=None,turn=None,wait=None,time_left=None):
         self.name = name
         self.arrival=arrival
         self.cycle=cycle
         self.finish = finish
         self.turn=turn
         self.wait=wait
+        self.time_left=time_left
 
 def read_spreadsheet(path):
     job_list = []
