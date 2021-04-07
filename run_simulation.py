@@ -1,6 +1,7 @@
 """This file runs the simulations"""
 import copy
 
+QUANT = 4
 
 #******************* FCFS*******************#
 """Do the FCFS Simulation
@@ -44,6 +45,7 @@ def sjn(job_list):
 
     #initially, all jobs besdies the first are waiting
     waiting_q = this_list[1:]
+    
 
     #first job will run to completion since sjn is non-prempetive
     finish_time = this_list[0].cycle
@@ -62,7 +64,7 @@ def sjn(job_list):
 
         #the chosen job will run to completion
         time = time + this_job.cycle
-
+    
     #set the turnaround and wait times for each job
     for job in this_list:
         job.turn = int(job.finish) - int(job.arrival)
@@ -85,7 +87,6 @@ def srt(job_list):
 
     #while there are still jobs with time remaining
     while(do_srt(this_list)):
-        
         #running job is the job available at this time with the lowest cycle
         running_job = get_running(this_list,time)
         
@@ -108,11 +109,47 @@ def srt(job_list):
     for job in this_list:
         job.turn = int(job.finish) - int(job.arrival)
         job.wait = int(job.turn) - int(job.cycle)
-
+    
     return((this_list,get_avg_turn(this_list),get_avg_wait(this_list)))
         
+#******************Round Robin (yum)********************#
+def round_robin(job_list):
+    this_list = copy.deepcopy(job_list)
+    
+    #init each job's remaining time to its cycle
+    for t in this_list:
+        t.time_left = t.cycle
+
+    time = 0
+    
+    while(True):
+        done = True
+        for job in this_list:
+            if (job.time_left > 0):
+                done = False
+                if(job.time_left>QUANT and job.arrival <=  time):
+                    time = time + QUANT
+                    job.time_left = job.time_left - QUANT
+                else:
+                    if(job.arrival <=  time):
+                        time = time + job.time_left
+                        job.time_left = 0
+                        job.finish = time        
+        if done:
+            break
+                  
+            
+    #set the turnaround and wait times for each job
+    for job in this_list:
+        job.turn = int(job.finish) - int(job.arrival)
+        job.wait = int(job.turn) - int(job.cycle)
+
+
+    
+    return((this_list,get_avg_turn(this_list),get_avg_wait(this_list)))
         
-  
+
+        
 """
 reference for average functions:
 https://stackoverflow.com/questions/47779513/get-an-average-value-of-a-property-from-a-list-of-objects
@@ -129,11 +166,14 @@ def sort_by_cycle(job_list):
 def sort_by_cycle_left(job_list):
     return (sorted(job_list, key=lambda x: x.time_left, reverse=False))
 
+def sort_by_arrival(job_list):
+    return (sorted(job_list, key=lambda x: x.arrival, reverse=False))
+
 """Get the first available job with shortest cycle time"""
 def get_next_sjn(waiting,time):
     temp_wait = sort_by_cycle(waiting)
     for job in temp_wait:
-        if(job.arrival <= time):
+        if(job.arrival <= time and job.finish == None):
             return (job)
 
 """helper funciton to check if there are still jobs to process for srt """
@@ -150,5 +190,5 @@ def get_running(job_list,time):
     for job in temp_list:
         if(job.finish == None and job.arrival <= time):
             return job
-            
+
     

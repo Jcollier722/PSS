@@ -68,8 +68,9 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# Spreadsheets
+# Simulation data 
 *.xlsx
+*.docx
 
 # Sphinx documentation
 docs/_build/
